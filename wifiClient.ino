@@ -59,74 +59,79 @@ void setup() {
   // Print the IP address
   Serial.println(WiFi.localIP());
 }
-
-void loop() {
-   //Serial.println("loop started");
-  RtcTemperature temperature = rtcObject.GetTemperature(); //read temperature
-   //Serial.println("temperature read");
- if(state==1){
-   //Serial.println("first if run");
-            if(temperature<10){
-              if(p6=0){
+void AutoCheck(float t){
+            if(t<10){
+              if(p6==0){
                  digitalWrite(D6, 1);
                  p6=1;
                 }
-                 if(p7=0){
+                 if(p7==0){
                  digitalWrite(D7, 1);
                  p7=1;
                 }
-                 if(p8=0){
+                 if(p8==0){
                  digitalWrite(D8, 1);
                  p8=1;
                 }
                                
               }
-              else if(temperature>10 && temperature<15){
-                   if(p6=1){
+              else if(t>10 && t<15){
+                   if(p6==1){
                  digitalWrite(D6, 0);
                  p6=0;
                 }
-                 if(p7=0){
+                 if(p7==0){
                  digitalWrite(D7, 1);
                  p7=1;
                 }
-                 if(p8=0){
+                 if(p8==0){
                  digitalWrite(D8, 1);
                  p8=1;
                 }
                           
                 }
-              else if(temperature>15 && temperature<18){
-                      if(p6=1){
+              else if(t>15 && t<18){
+                      if(p6==1){
                  digitalWrite(D6, 0);
                  p6=0;
                 }
-                 if(p7=1){
+                 if(p7==1){
                  digitalWrite(D7, 0);
                  p7=0;
                 }
-                 if(p8=0){
+                 if(p8==0){
                  digitalWrite(D8, 1);
                  p8=1;
                 }
                             
                 }
-              else if(temperature>18){
-                           if(p6=1){
+              else if(t>18){
+                           if(p6==1){
                  digitalWrite(D6, 0);
                  p6=0;
                 }
-                 if(p7=1){
+                 if(p7==1){
                  digitalWrite(D7, 0);
                  p7=0;
                 }
-                 if(p8=1){
+                 if(p8==1){
                  digitalWrite(D8, 0);
                  p8=0;
                 }
                          
                 }
-                delay(1);
+                delay(100);
+  }
+void loop() {
+   //Serial.println("loop started");
+    float moisture_percentage;
+    moisture_percentage =((analogRead(A0)/740.0)*100);
+    //Serial.print("moisture_percentage");
+   // Serial.println(moisture_percentage);
+    RtcTemperature temperature = rtcObject.GetTemperature(); //read temperature
+   //Serial.println("temperature read");
+    if(state==1){
+     AutoCheck(temperature.AsFloatDegC());
   }
   //----------------------------------------------------------------
   //temperature.Print(Serial);
@@ -136,12 +141,7 @@ void loop() {
   
   if (!client) {
      delay(1000);
-     Serial.println(counter++);
-     if(counter>100){
-      counter=0;
-      Serial.flush();
-      }
-    return;
+     return;
   }
 
   // Wait until the client sends some data
@@ -167,6 +167,7 @@ void loop() {
   }
   else  if(req.indexOf("/state/1") != -1){
   state=1;
+   AutoCheck(temperature.AsFloatDegC());
   }
   else if (req.indexOf("/l1/0") != -1 &&state==0) {
      digitalWrite(D6, 0);
@@ -205,7 +206,7 @@ void loop() {
   String s = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n<!DOCTYPE HTML>\r\n<html>";
    s+="<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css\" integrity=\"sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm\" crossorigin=\"anonymous\">";
    s+="<div class=\"row\" style=\"text-align:center\"><div style=\"border:solid 1px blue;margin:auto;width:50%;margin-top:30px;min-width:200px;border-radius:5px\" class=\"panel shadow p-3 mb-5 bg-white rounded\" id=\"info\"> ";
-   s+="</br><div class=\"alert alert-info pull-right col-xs-12\">Temperature : "+String(temperature.AsFloatDegC(),2)+" C</div>";
+   s+="</br><div class=\"alert alert-info pull-right col-xs-12\">Temperature :<span style=\"color:red\"> "+String(temperature.AsFloatDegC(),2)+" C </span> Moisture : <span style=\"color:red\"> "+String(moisture_percentage)+" % </span></div>";
    s+="<div class=\"alert alert-info pull-left col-xs-12\">State : ";
    s+=(state) ? "Automatic" : "Manual";
    s+="</div>";
